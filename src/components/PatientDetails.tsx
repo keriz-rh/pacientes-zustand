@@ -1,7 +1,7 @@
+import { toast } from "react-toastify";
 import { Patient } from "../types";
 import PatienDetailItem from "./PatienDetailItem";
 import { usePatientStore } from "../store";
-import { toast } from "react-toastify";
 
 type PatientDetailsProps = {
     patient: Patient
@@ -11,7 +11,6 @@ function PatientDetails({ patient }: PatientDetailsProps) {
 
     const deletePatient = usePatientStore((state) => state.deletePatient)
     const getPatienById = usePatientStore((state) => state.getPatientById)
-    const upDatePatient = usePatientStore((state) => state.upDatePatient)
 
     const handleClick = () => {
        deletePatient(patient.id), 

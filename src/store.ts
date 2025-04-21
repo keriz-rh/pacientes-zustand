@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { devtools } from "zustand/middleware"
+import { devtools, persist } from "zustand/middleware"
 import { v4 as uuidv4 } from 'uuid'
 import { DraftPatient, Patient } from "./types"
 
@@ -17,31 +17,42 @@ const createPatient = (patient: DraftPatient): Patient => {
 }
 
 export const usePatientStore = create<PatientState>()(
-  devtools((set) => ({
-    patients: [],
-    activeId: '',
-    addPatient: (data) => {
-      const newPatient = createPatient(data)
-      set((state) => ({
-        patients: [...state.patients, newPatient]
-      }), false, 'addPatient')
-    },
-    deletePatient: (id) => {
-      set((state) => ({
-        patients: state.patients.filter(patient => patient.id !== id)
-      }), false, 'deletePatient')
-    },
-    getPatientById: (id) => {
-        set(() => ({
-            activeId: id
-        }))
-    },
-    upDatePatient: (data) => {
-        set((state) => ({
-            patients: state.patients.map( patient => patient.id === state.activeId ? {id: state.activeId, ...
-                data} : patient),
-                activeId: ''
-        }))
-    }
-  }))
-)
+    devtools(
+      persist(
+        (set, get) => ({
+          patients: [],
+          activeId: '',
+          addPatient: (data) => {
+            const newPatient = createPatient(data)
+            set((state) => ({
+              patients: [...state.patients, newPatient]
+            }), false, 'addPatient')
+          },
+          deletePatient: (id) => {
+            set((state) => ({
+              patients: state.patients.filter(patient => patient.id !== id)
+            }), false, 'deletePatient')
+          },
+          getPatientById: (id) => {
+            // Primero encontramos el paciente
+            const patient = get().patients.find(patient => patient.id === id)
+            // Actualizamos el activeId
+            set({ activeId: id })
+            // Retornamos el paciente encontrado (o undefined si no existe)
+            return patient
+          },
+          upDatePatient: (data) => {
+            set((state) => ({
+              patients: state.patients.map(patient =>
+                patient.id === state.activeId ? { id: state.activeId, ...data } : patient
+              ),
+              activeId: ''
+            }))
+          }
+        }),
+        {
+          name: 'patient-storage'
+        }
+      )
+    )
+  )
